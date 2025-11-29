@@ -168,3 +168,125 @@ func isTimeValue(s string) bool {
 	_, err := strconv.ParseFloat(s, 64)
 	return err == nil && strings.Contains(s, ".")
 }
+
+// parseFunction parses a FUNCTION section
+func (p *Parser) parseFunction(reader io.Reader) (*Function, error) {
+	scanner := bufio.NewScanner(reader)
+	fn := &Function{
+		Lines: make([]Line, 0),
+	}
+
+	lineNum := 0
+	inLines := false
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Parse FUNCTION header
+		if strings.HasPrefix(line, "FUNCTION") {
+			fn.Name = p.extractFunctionName(line)
+			continue
+		}
+
+		// Parse "Defined:" line
+		if strings.Contains(line, "Defined:") {
+			fn.Defined, fn.StartLine = p.parseFunctionDefinition(line)
+			continue
+		}
+
+		// Parse "Called N times" line
+		if strings.HasPrefix(line, "Called") {
+			fn.Count = p.parseCalledCount(line)
+			continue
+		}
+
+		// Parse "Total time:" line
+		if strings.HasPrefix(line, "Total time:") {
+			fn.TotalTime = p.parseFunctionTime(line)
+			continue
+		}
+
+		// Parse " Self time:" line
+		if strings.Contains(line, "Self time:") {
+			fn.SelfTime = p.parseFunctionTime(line)
+			continue
+		}
+
+		// Skip header line
+		if strings.Contains(line, "count  total (s)   self (s)") {
+			inLines = true
+			continue
+		}
+
+		// Parse line execution data
+		if inLines && strings.TrimSpace(line) != "" {
+			lineNum++
+			lineData, err := p.parseLineData(line, lineNum)
+			if err == nil && lineData != nil {
+				fn.Lines = append(fn.Lines, *lineData)
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return fn, nil
+}
+
+// extractFunctionName extracts the function name from a FUNCTION line
+func (p *Parser) extractFunctionName(line string) string {
+	// Format: "FUNCTION  FuncName()" or "FUNCTION FuncName()"
+	parts := strings.Fields(line)
+	if len(parts) >= 2 {
+		return parts[1]
+	}
+	return ""
+}
+
+// parseFunctionDefinition parses the "Defined:" line
+// Format: "    Defined: /path/to/file.vim line 10"
+func (p *Parser) parseFunctionDefinition(line string) (string, int) {
+	// Remove leading spaces and "Defined:" prefix
+	line = strings.TrimSpace(line)
+	line = strings.TrimPrefix(line, "Defined:")
+	line = strings.TrimSpace(line)
+
+	// Split by " line "
+	parts := strings.Split(line, " line ")
+	if len(parts) != 2 {
+		return "", 0
+	}
+
+	path := strings.TrimSpace(parts[0])
+	lineNum, _ := strconv.Atoi(strings.TrimSpace(parts[1]))
+
+	return path, lineNum
+}
+
+// parseCalledCount parses the "Called N times" line
+func (p *Parser) parseCalledCount(line string) int {
+	// Format: "Called 2 times" or "Called 1 time"
+	fields := strings.Fields(line)
+	if len(fields) >= 2 {
+		count, _ := strconv.Atoi(fields[1])
+		return count
+	}
+	return 0
+}
+
+// parseFunctionTime parses time from "Total time:" or "Self time:" lines
+// Format: "Total time:   0.000050" or " Self time:   0.000040"
+func (p *Parser) parseFunctionTime(line string) time.Duration {
+	// Remove prefix and get the time value
+	line = strings.TrimSpace(line)
+	if strings.HasPrefix(line, "Total time:") {
+		line = strings.TrimPrefix(line, "Total time:")
+	} else if strings.HasPrefix(line, "Self time:") {
+		line = strings.TrimPrefix(line, "Self time:")
+	}
+
+	timeStr := strings.TrimSpace(line)
+	return p.parseTime(timeStr)
+}
