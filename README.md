@@ -4,40 +4,138 @@ Generate code coverage information for Vim scripts.
 
 This is a Go reimplementation of [covimerage](https://github.com/Vimjas/covimerage), providing a fast, standalone binary for coverage analysis of Vim script code.
 
+## Features
+
+- ✅ Parse Vim profile output (`:profile`)
+- ✅ Generate coverage data in JSON format
+- ✅ Merge multiple profile files
+- ✅ Text and XML (Cobertura) report generation
+- ✅ Fast, single-binary distribution
+- ✅ No Python dependencies
+
 ## Installation
 
 ```bash
 go install github.com/omochice/go-covimerage/cmd/go-covimerage@latest
 ```
 
-## Usage
+Or build from source:
 
 ```bash
-# Run Vim with profiling and generate coverage
-go-covimerage run vim -u test/vimrc -c 'Vader! test/*.vader'
+git clone https://github.com/omochice/go-covimerage
+cd go-covimerage
+make build
+```
 
-# Parse profile and write coverage data
+## Usage
+
+### Basic Workflow
+
+1. Generate Vim profile output:
+
+```vim
+:profile start profile.txt
+:profile file */path/to/*.vim
+:profile func *
+" Run your tests here
+:qall!
+```
+
+2. Generate coverage data:
+
+```bash
+go-covimerage write-coverage profile.txt
+```
+
+This creates a `.coverage` file containing coverage information.
+
+### Commands
+
+#### write-coverage
+
+Parse Vim profile files and generate coverage data.
+
+```bash
+# Basic usage
 go-covimerage write-coverage profile.txt
 
-# Generate text report
-go-covimerage report
+# Multiple profile files
+go-covimerage write-coverage profile1.txt profile2.txt
 
-# Generate XML report
-go-covimerage xml
+# Custom output file
+go-covimerage write-coverage --data-file=my-coverage.json profile.txt
+
+# Append to existing coverage
+go-covimerage write-coverage --append profile.txt
 ```
+
+**Options:**
+- `--data-file` - Output file path (default: `.coverage`)
+- `--append` - Append to existing coverage data
 
 ## Development
 
-```bash
-# Run tests
-make test
+### Running Tests
 
-# Build
-make build
+```bash
+# Run all tests
+make test
 
 # Run tests with coverage
 make test-coverage
+
+# Run tests for a specific package
+go test ./internal/parser/
 ```
+
+### Building
+
+```bash
+# Build binary
+make build
+
+# Install locally
+make install
+```
+
+### Project Structure
+
+```
+go-covimerage/
+├── cmd/go-covimerage/     # CLI entry point
+├── internal/
+│   ├── parser/            # Vim profile parser
+│   ├── coverage/          # Coverage data generation
+│   └── report/            # Report generators (text, XML)
+├── testdata/              # Test fixtures
+└── Makefile
+```
+
+## Implementation Status
+
+**Completed:**
+- ✅ Vim profile parser
+- ✅ Coverage data generation and merging
+- ✅ JSON coverage writer
+- ✅ Text report generator
+- ✅ XML (Cobertura) report generator
+- ✅ CLI with `write-coverage` command
+
+**Future Work:**
+- ⏳ `run` command (wrap Vim execution with profiling)
+- ⏳ `report` command (generate text reports from coverage data)
+- ⏳ `xml` command (generate XML reports from coverage data)
+- ⏳ Configuration file support
+- ⏳ Advanced filtering and source mapping
+
+## Contributing
+
+This project follows Test-Driven Development (TDD) with red-green-refactor cycles. All contributions should:
+
+1. Include tests for new functionality
+2. Follow Go best practices and idioms
+3. Use conventional commit messages
+4. Maintain >80% test coverage
 
 ## License
 
