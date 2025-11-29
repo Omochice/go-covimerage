@@ -1,0 +1,40 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# Binary output
+/go-covimerage
+/cmd/go-covimerage/go-covimerage
+
+# Coverage files
+.coverage
+coverage.xml
+*.coverage
+
+# Profile files
+*.profile
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+
+# Spec files
+.cckiro/
