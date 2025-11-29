@@ -2,11 +2,11 @@ package coverage
 
 // ScriptCoverage represents coverage for a single script
 type ScriptCoverage struct {
-	Path          string      // Path to the script file
-	ExecutedLines map[int]int // Line number -> execution count
-	MissingLines  []int       // Lines not executed
-	TotalLines    int         // Total executable lines
-	CoveredLines  int         // Lines executed at least once
+	Path          string      `json:"path"`           // Path to the script file
+	ExecutedLines map[int]int `json:"executed_lines"` // Line number -> execution count
+	MissingLines  []int       `json:"missing_lines"`  // Lines not executed
+	TotalLines    int         `json:"total_lines"`    // Total executable lines
+	CoveredLines  int         `json:"covered_lines"`  // Lines executed at least once
 }
 
 // CoveragePercentage calculates the coverage percentage for this script
@@ -19,8 +19,8 @@ func (sc *ScriptCoverage) CoveragePercentage() float64 {
 
 // CoverageData represents coverage information for all scripts
 type CoverageData struct {
-	Scripts map[string]*ScriptCoverage // Path -> Coverage
-	Version string                      // Format version
+	Scripts map[string]*ScriptCoverage `json:"scripts"` // Path -> Coverage
+	Version string                      `json:"version"` // Format version
 }
 
 // OverallCoverage calculates overall coverage statistics
