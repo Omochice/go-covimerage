@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -289,4 +290,160 @@ func (p *Parser) parseFunctionTime(line string) time.Duration {
 
 	timeStr := strings.TrimSpace(line)
 	return p.parseTime(timeStr)
+}
+
+// Parse parses a complete Vim profile from a reader
+func (p *Parser) Parse(reader io.Reader) (*Profile, error) {
+	profile := &Profile{
+		Scripts:   make(map[string]*Script),
+		Functions: make([]*Function, 0),
+	}
+
+	scanner := bufio.NewScanner(reader)
+	var currentScript *Script
+	var currentFunction *Function
+	var inScriptLines bool
+	var inFunctionLines bool
+	scriptLineNum := 0
+	functionLineNum := 0
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Check for SCRIPT section
+		if strings.HasPrefix(line, "SCRIPT") {
+			// Save previous script if exists
+			if currentScript != nil {
+				profile.Scripts[currentScript.Path] = currentScript
+			}
+
+			// Start new script
+			currentScript = &Script{
+				Path:      p.extractScriptPath(line),
+				Lines:     make(map[int]*Line),
+				Functions: make(map[string]*Function),
+			}
+			inScriptLines = false
+			inFunctionLines = false
+			scriptLineNum = 0
+			continue
+		}
+
+		// Check for FUNCTION section
+		if strings.HasPrefix(line, "FUNCTION") {
+			// Save previous function if exists
+			if currentFunction != nil {
+				profile.Functions = append(profile.Functions, currentFunction)
+			}
+
+			// Start new function
+			currentFunction = &Function{
+				Name:  p.extractFunctionName(line),
+				Lines: make([]Line, 0),
+			}
+			inScriptLines = false
+			inFunctionLines = false
+			functionLineNum = 0
+			continue
+		}
+
+		// Process SCRIPT section
+		if currentScript != nil && currentFunction == nil {
+			// Skip metadata lines
+			if strings.HasPrefix(line, "Sourced") ||
+				strings.HasPrefix(line, "Total time:") ||
+				strings.Contains(line, "Self time:") {
+				continue
+			}
+
+			// Check for line data header
+			if strings.Contains(line, "count  total (s)   self (s)") {
+				inScriptLines = true
+				continue
+			}
+
+			// Parse script lines
+			if inScriptLines && strings.TrimSpace(line) != "" {
+				scriptLineNum++
+				lineData, err := p.parseLineData(line, scriptLineNum)
+				if err == nil && lineData != nil {
+					currentScript.Lines[scriptLineNum] = lineData
+				}
+			}
+		}
+
+		// Process FUNCTION section
+		if currentFunction != nil {
+			// Parse "Defined:" line
+			if strings.Contains(line, "Defined:") {
+				currentFunction.Defined, currentFunction.StartLine = p.parseFunctionDefinition(line)
+				continue
+			}
+
+			// Parse "Called N times" line
+			if strings.HasPrefix(line, "Called") {
+				currentFunction.Count = p.parseCalledCount(line)
+				continue
+			}
+
+			// Parse "Total time:" line
+			if strings.HasPrefix(line, "Total time:") {
+				currentFunction.TotalTime = p.parseFunctionTime(line)
+				continue
+			}
+
+			// Parse " Self time:" line
+			if strings.Contains(line, "Self time:") {
+				currentFunction.SelfTime = p.parseFunctionTime(line)
+				continue
+			}
+
+			// Check for line data header
+			if strings.Contains(line, "count  total (s)   self (s)") {
+				inFunctionLines = true
+				continue
+			}
+
+			// Parse function lines
+			if inFunctionLines && strings.TrimSpace(line) != "" {
+				functionLineNum++
+				lineData, err := p.parseLineData(line, functionLineNum)
+				if err == nil && lineData != nil {
+					currentFunction.Lines = append(currentFunction.Lines, *lineData)
+				}
+			}
+		}
+	}
+
+	// Save last script
+	if currentScript != nil {
+		profile.Scripts[currentScript.Path] = currentScript
+	}
+
+	// Save last function
+	if currentFunction != nil {
+		profile.Functions = append(profile.Functions, currentFunction)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return profile, nil
+}
+
+// ParseFile parses a Vim profile from a file
+func (p *Parser) ParseFile(path string) (*Profile, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	return p.Parse(file)
+}
+
+// ParseString parses a Vim profile from a string
+func (p *Parser) ParseString(content string) (*Profile, error) {
+	return p.Parse(strings.NewReader(content))
 }
