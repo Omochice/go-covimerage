@@ -1,0 +1,2 @@
+[lint.md033]
+allowed-elements = ["details", "summary"]
