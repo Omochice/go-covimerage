@@ -1,0 +1,30 @@
+[formatter.formatjson5]
+command = "formatjson5"
+includes = ["*.json5"]
+options = ["--replace", "--indent", "2"]
+
+[formatter.golangci-lint]
+command = "golangci-lint"
+includes = ["*.go"]
+options = ["fmt"]
+
+[formatter.tombi]
+command = "tombi"
+includes = ["*.toml"]
+options = ["format"]
+
+[formatter.toml-sort]
+command = "toml-sort"
+includes = ["*.toml"]
+options = ["-i"]
+
+[formatter.typos]
+command = "typos"
+includes = ["*"]
+options = ["--write-changes", "--force-exclude"]
+
+[formatter.yamlfmt]
+command = "yamlfmt"
+excludes = []
+includes = ["*.yaml", "*.yml"]
+options = ["-conf", "yamlfmt.yaml"]

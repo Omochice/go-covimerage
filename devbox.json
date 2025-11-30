@@ -7,15 +7,19 @@
     "treefmt@2.4.0",
     "formatjson5@0.2.6",
     "zizmor@1.16.3",
-    "mado@0.3.0"
+    "mado@0.3.0",
+    "toml-sort@0.24.3",
+    "tombi@0.6.40"
   ],
   "shell": {
-    "init_hook": [
-      "echo 'Welcome to devbox!' > /dev/null"
-    ],
     "scripts": {
-      "test": [
-        "echo \"Error: no test specified\" && exit 1"
+      "build": "CGO_ENABLE=0 go build -o go-covimerage ./cmd/go-covimerage",
+      "test": "go test -v ./...",
+      "fmt": "treefmt",
+      "check": [
+        "golangci-lint run ./...",
+        "zizmor .github",
+        "mado check"
       ]
     }
   }
