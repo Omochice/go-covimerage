@@ -16,13 +16,13 @@ func TestParser_ParseLineData(t *testing.T) {
 		wantError     bool
 	}{
 		{
-			name:         "line with count and self time",
-			input:        "    5              0.000020 let g:count = 0",
-			wantNumber:   -1, // Will be set separately
-			wantCount:    5,
+			name:          "line with count and self time",
+			input:         "    5              0.000020 let g:count = 0",
+			wantNumber:    -1, // Will be set separately
+			wantCount:     5,
 			wantTotalTime: 0,
-			wantSelfTime: 20 * time.Microsecond,
-			wantError:    false,
+			wantSelfTime:  20 * time.Microsecond,
+			wantError:     false,
 		},
 		{
 			name:          "line with count and total time",

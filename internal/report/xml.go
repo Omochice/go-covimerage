@@ -22,25 +22,25 @@ func NewXMLReporter(data *coverage.CoverageData) *XMLReporter {
 
 // Coverage represents the root Cobertura XML element
 type Coverage struct {
-	XMLName       xml.Name  `xml:"coverage"`
-	LineRate      float64   `xml:"line-rate,attr"`
-	BranchRate    float64   `xml:"branch-rate,attr"`
-	Version       string    `xml:"version,attr"`
-	Timestamp     int64     `xml:"timestamp,attr"`
-	LinesCovered  int       `xml:"lines-covered,attr"`
-	LinesValid    int       `xml:"lines-valid,attr"`
-	BranchesCovered int     `xml:"branches-covered,attr"`
-	BranchesValid int       `xml:"branches-valid,attr"`
-	Packages      []Package `xml:"packages>package"`
+	XMLName         xml.Name  `xml:"coverage"`
+	LineRate        float64   `xml:"line-rate,attr"`
+	BranchRate      float64   `xml:"branch-rate,attr"`
+	Version         string    `xml:"version,attr"`
+	Timestamp       int64     `xml:"timestamp,attr"`
+	LinesCovered    int       `xml:"lines-covered,attr"`
+	LinesValid      int       `xml:"lines-valid,attr"`
+	BranchesCovered int       `xml:"branches-covered,attr"`
+	BranchesValid   int       `xml:"branches-valid,attr"`
+	Packages        []Package `xml:"packages>package"`
 }
 
 // Package represents a package in Cobertura XML
 type Package struct {
-	Name      string  `xml:"name,attr"`
-	LineRate  float64 `xml:"line-rate,attr"`
+	Name       string  `xml:"name,attr"`
+	LineRate   float64 `xml:"line-rate,attr"`
 	BranchRate float64 `xml:"branch-rate,attr"`
 	Complexity float64 `xml:"complexity,attr"`
-	Classes   []Class `xml:"classes>class"`
+	Classes    []Class `xml:"classes>class"`
 }
 
 // Class represents a class (file) in Cobertura XML

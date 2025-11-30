@@ -20,7 +20,7 @@ func (sc *ScriptCoverage) CoveragePercentage() float64 {
 // CoverageData represents coverage information for all scripts
 type CoverageData struct {
 	Scripts map[string]*ScriptCoverage `json:"scripts"` // Path -> Coverage
-	Version string                      `json:"version"` // Format version
+	Version string                     `json:"version"` // Format version
 }
 
 // OverallCoverage calculates overall coverage statistics
